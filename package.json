@@ -14,7 +14,8 @@
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"svelte": "^4.2.7",
 		"vite": "^5.0.3",
-		"d3": "^7.8.5"
+		"d3": "^7.8.5",
+		"topojson-client": "^3.1.0"
 	},
 	"type": "module"
 }
