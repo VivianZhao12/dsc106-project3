@@ -1,4 +1,3 @@
-<h1>testing</h1>
 
 <script>
     import { onMount } from 'svelte';
@@ -9,6 +8,10 @@
     let county_data = [];
     let us;
     let svg;
+    let zoom;
+    let initialTransform = d3.zoomIdentity;
+
+
     onMount(async () => {
         const res = await fetch('county_data.csv'); 
         const csv = await res.text();
@@ -23,8 +26,8 @@
  
     function renderChart() {
 
-        const width = 975;
-        const height = 610;
+        const width = 960;
+        const height = 600;
 
         const zoom = d3.zoom()
             .scaleExtent([1, 8])
@@ -37,6 +40,8 @@
             .style("max-width", "100%")
             .style("height", "auto")
             .call(zoom);
+
+        svg.on("dblclick.zoom", null); // Disable default double-click zoom
 
         const path = d3.geoPath();
 
@@ -59,13 +64,15 @@
             .attr("stroke", "white")
             .attr("stroke-linejoin", "round")
             .attr("d", path(topojson.mesh(us, us.objects.states, (a, b) => a !== b)));
+        
+        svg.on("dblclick", reset);
 
         function reset() {
             states.transition().style("fill", null);
             svg.transition().duration(750).call(
                 zoom.transform,
                 d3.zoomIdentity,
-                d3.zoomTransform(svg.node()).invert([width / 2, height / 2])
+                d3.zoomTransform(svg.node()).invert([width, height])
             );
         }
 
@@ -73,7 +80,7 @@
             const [[x0, y0], [x1, y1]] = path.bounds(d);
             event.stopPropagation();
             states.transition().style("fill", null);
-            d3.select(this).transition().style("fill", "red");
+            d3.select(this).transition().style("fill", "green");
             svg.transition().duration(750).call(
                 zoom.transform,
                 d3.zoomIdentity
@@ -97,5 +104,23 @@
 </main>
 
 <style>
-    main {}
+    main {
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh; 
+        width: 100vw; 
+    }
+    svg {
+        margin: auto; /* Center the SVG horizontally */
+        display: block;
+        width: 100%; /* Make SVG responsive */
+        max-width: 960px; /* Maximum width */
+        height: auto; /* Maintain aspect ratio */
+    }
+
 </style>
+
+
+
