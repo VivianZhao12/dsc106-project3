@@ -1,17 +1,6 @@
+
 <script>
-import { onMount } from 'svelte' ;
+    import App from '../components/App.svelte';
+</script>
 
-let tempData = [];
-
- onMount(async () => {
-
-     const res = await fetch('county_data.csv'); 
-
-     const csv = await res.text();
-
-     tempData = d3.csvParse(csv, d3.autoType)
-
-     console.log(tempData);
-
- });
- </script>
+<App />
