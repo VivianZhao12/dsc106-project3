@@ -10,6 +10,9 @@
     let svg;
     let zoom;
     let initialTransform = d3.zoomIdentity;
+    let isZoomed = false;
+    let lastClicked = null;
+
 
 
     onMount(async () => {
@@ -26,7 +29,7 @@
  
     function renderChart() {
 
-        const width = 960;
+        const width = 1280;
         const height = 600;
 
         const zoom = d3.zoom()
@@ -71,25 +74,40 @@
             states.transition().style("fill", null);
             svg.transition().duration(750).call(
                 zoom.transform,
-                d3.zoomIdentity,
-                d3.zoomTransform(svg.node()).invert([width, height])
+                d3.zoomIdentity, // Reset zoom
             );
+
+            isZoomed = false;
+            lastClicked = null;
         }
+
 
         function clicked(event, d) {
             const [[x0, y0], [x1, y1]] = path.bounds(d);
             event.stopPropagation();
-            states.transition().style("fill", null);
-            d3.select(this).transition().style("fill", "green");
-            svg.transition().duration(750).call(
-                zoom.transform,
-                d3.zoomIdentity
-                    .translate(width / 2, height / 2)
-                    .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height)))
-                    .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
-                d3.pointer(event, svg.node())
-            );
+
+            // Check if we're zooming in on the same element or if the map is already zoomed in
+            if (isZoomed && lastClicked === this) {
+                // Reset to initial zoom
+                reset();
+            } else {
+                // Proceed with zooming in
+                states.transition().style("fill", null);
+                d3.select(this).transition().style("fill", "green");
+                svg.transition().duration(750).call(
+                    zoom.transform,
+                    d3.zoomIdentity
+                        .translate(width / 2, height / 2)
+                        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height)))
+                        .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
+                    d3.pointer(event, svg.node())
+                );
+
+                isZoomed = true;
+                lastClicked = this;
+            }
         }
+
 
         function zoomed(event) {
             const {transform} = event;
