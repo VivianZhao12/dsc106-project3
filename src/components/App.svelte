@@ -29,8 +29,11 @@
  
     function renderChart() {
 
-        const width = 1280;
-        const height = 600;
+
+        const path = d3.geoPath();
+
+        const width = 1000;
+        const height = 640;
 
         const zoom = d3.zoom()
             .scaleExtent([1, 8])
@@ -41,12 +44,8 @@
             .attr("width", width)
             .attr("height", height)
             .style("max-width", "100%")
-            .style("height", "auto")
+            .style("height", "100%")
             .call(zoom);
-
-        svg.on("dblclick.zoom", null); // Disable default double-click zoom
-
-        const path = d3.geoPath();
 
         const g = svg.append("g");
 
@@ -134,7 +133,6 @@
         margin: auto; /* Center the SVG horizontally */
         display: block;
         width: 100%; /* Make SVG responsive */
-        max-width: 960px; /* Maximum width */
         height: auto; /* Maintain aspect ratio */
     }
 
