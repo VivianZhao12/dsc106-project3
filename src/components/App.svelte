@@ -6,6 +6,7 @@
     
 
     let county_data = [];
+    let state_tot_cases = [];
     let us;
     let svg;
     let zoom;
@@ -20,6 +21,12 @@
         const csv = await res.text();
         county_data = d3.csvParse(csv, d3.autoType)
         console.log(county_data);
+
+        const res1 = await fetch('state_tot_cases.csv'); 
+        const csv1 = await res1.text();
+        state_tot_cases = d3.csvParse(csv1, d3.autoType);
+        console.log(state_tot_cases);
+
         const resJSON = await fetch('states-albers-10m.json');
         us = await resJSON.json();
         console.log(us);
