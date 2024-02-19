@@ -56,7 +56,7 @@
         const g = svg.append("g");
 
         // const maxStateCases = 12251820;
-        const stateColorScale = d3.scaleQuantize([0.17, 0.41], d3.schemeBlues[9]);
+        const stateColorScale = d3.scaleQuantize([0.17, 0.41], d3.schemeBlues[5]);
 
         let casesByState = {}; // This will map state abbreviations to total cases
         state_tot_cases.forEach(d => {
@@ -196,6 +196,57 @@
             g.attr("transform", transform);
             g.attr("stroke-width", 1 / transform.k);
         }
+
+        const legendHeight = 200; // Total height of the legend
+        const legendWidth = 20; // Width of each legend item
+        const legendMargin = 10; // Margin around the legend
+        const legendNumBlocks = stateColorScale.range().length; // Number of blocks in the legend
+        const legendBlockHeight = legendHeight / legendNumBlocks; // Height of each block
+
+        // Define the legend group
+        const legend = svg.append('g')
+            .attr('id', 'legend')
+            .attr('transform', `translate(${width - legendWidth - legendMargin}, ${height - legendHeight - legendMargin})`);
+
+        // Add colored rectangles for each segment of the legend
+
+        const [x_0, x_1, x_2, x_3, x_4] = stateColorScale.range()
+
+        legend.selectAll('rect')
+            .data([x_4, x_3, x_2, x_1, x_0])
+            .enter().append('rect')
+                .attr('x', 0)
+                .attr('y', (d, i) => i * legendBlockHeight)
+                .attr('width', legendWidth)
+                .attr('height', legendBlockHeight)
+                .attr('fill', d => d);
+
+
+        // legend.append('text')
+        //     .attr('class', 'legend-title')
+        //     .attr('x', legendWidth/2)
+        //     .attr('y', 15) // Position the title above the legend rectangles
+        //     .style('text-anchor', 'middle')
+        //     .style('font-weight', 'bold')
+        //     .text('Percent Cases'); // Title text
+
+        // Add text labels for each segment of the legend
+        const legendScale = d3.scaleLinear()
+            .domain(stateColorScale.domain())
+            .range([legendHeight, 0]);
+
+        const legendAxis = d3.axisRight(legendScale)
+            .ticks(legendNumBlocks)
+            .tickFormat(d => `${d}%`);
+
+
+    
+        legend.call(legendAxis)
+            .selectAll('text')
+            .style('text-anchor', 'start')
+            .attr('x', 5)
+            .attr('dy', 0)
+            .attr('transform', 'translate(20,0)');
     }
 </script>
 
@@ -227,7 +278,14 @@
 
     .state-name-text, .state-cases-text {
         font-size: 12px;
-        fill: #000;
+        fill:
+         #000;
+    }
+
+    .legend-title {
+    fill: #000;
+    font-size: 14px;
+    font-weight: bold;
     }
 
 /* Add any additional styling as needed */
