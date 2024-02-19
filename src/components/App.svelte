@@ -56,14 +56,53 @@
 
         const g = svg.append("g");
 
+        // const maxStateCases = 12251820;
+        const stateColorScale = d3.scaleQuantize([0.17, 0.41], d3.schemeBlues[9]);
+
+        let casesByState = {}; // This will map state abbreviations to total cases
+        state_tot_cases.forEach(d => {
+     
+            casesByState[d.state_full] = d.percent_cases;
+        });
+
         const states = g.append("g")
             .attr("fill", "#444")
             .attr("cursor", "pointer")
             .selectAll("path")
             .data(topojson.feature(us, us.objects.states).features)
             .join("path")
+                .attr("fill", d => {
+                    const state_name = d.properties.name; 
+        
+                    const cases = casesByState[state_name]; // Default to 0 if no data available
+                    return stateColorScale(cases);
+                })
                 .on("click", clicked)
-                .attr("d", path);
+                .attr("d", path)
+                .join("path")
+                .attr("d", path)
+                .attr("class", "state")
+                .on("click", clicked)
+                .on("mouseover", handleMouseOver) // Add this event listener
+                .on("mouseout", handleMouseOut);  // Add this event listener
+
+
+        function handleMouseOver(event, d) {
+            // Create a text element and position it at the centroid of the hovered state
+            g.append("text")
+                .attr("transform", "translate(" + path.centroid(d) + ")")
+                .attr("dy", ".35em")
+                .attr("text-anchor", "middle")
+                .text(d.properties.name)
+                .attr("class", "state-name-hover"); // Add a class for optional styling
+        }
+
+        function handleMouseOut(event, d) {
+            // Remove the text element when the mouse leaves the state path
+            g.selectAll(".state-name-hover").remove();
+        }
+    
+                
 
         states.append("title")
             .text(d => d.properties.name);
