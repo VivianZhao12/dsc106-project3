@@ -1,4 +1,3 @@
-
 <script>
     import { onMount } from 'svelte';
     import * as d3 from 'd3';
@@ -88,24 +87,62 @@
 
 
         function handleMouseOver(event, d) {
-            // Create a text element and position it at the centroid of the hovered state
-            g.append("text")
-                .attr("transform", "translate(" + path.centroid(d) + ")")
-                .attr("dy", ".35em")
-                .attr("text-anchor", "middle")
-                .text(d.properties.name)
-                .attr("class", "state-name-hover"); // Add a class for optional styling
+            const [x, y] = path.centroid(d); // Get the centroid of the state path.
+            const stateName = d.properties.name; // Get the state name from the TopoJSON properties.
+            const cases = casesByState[stateName] || 0; // Get the cases or default to 0 if not found.
+
+            d3.select(this)
+                .attr("fill", "#fffea8") // Make the stroke color black
+
+            const infoBoxGroup = g.append("g")
+                .attr("class", "info-box-group")
+                .attr("transform", `translate(${x}, ${y})`)
+                .style("pointer-events", "none"); // Ignore mouse events
+
+            // Append a rectangle to act as the background box.
+            infoBoxGroup.append("rect")
+                .attr("x", 25) // Position the box centered around the centroid; adjust as needed.
+                .attr("y", -35) // Position the box above the centroid; adjust as needed.
+                .attr("width", 100) // Set the width of the box.
+                .attr("height", 50) // Set the height of the box.
+                .attr("fill", "white") // Set the fill color of the box.
+                .attr("stroke", "black") // Set the stroke color of the box.
+                .attr("class", "state-info-box"); // Add a class for styling.
+
+            // Append text to show the state name inside the box.
+            infoBoxGroup.append("text")
+                .attr("x", 75) // Center the text horizontally in the box.
+                .attr("y", -15) // Position the text in the box; adjust as needed.
+                .attr("text-anchor", "middle") // Center the text.
+                .text(stateName)
+                .attr("class", "state-name-text") // Add a class for styling.
+                .style('font-weight', 'bold');
+
+            // Append another text to show the percentage of cases inside the box.
+            infoBoxGroup.append("text")
+                .attr("x", 75) // Center the text horizontally in the box.
+                .attr("y", 0) // Position the text in the box; adjust as needed.
+                .attr("text-anchor", "middle") // Center the text.
+                .text(`${cases.toFixed(2)}% cases`) // Display the percentage of cases.
+                .attr("class", "state-cases-text"); // Add a class for styling.
         }
 
         function handleMouseOut(event, d) {
-            // Remove the text element when the mouse leaves the state path
-            g.selectAll(".state-name-hover").remove();
-        }
-    
-                
+            // Remove the group with the box and text when the mouse leaves the state path.
+            g.selectAll(".info-box-group").remove();
 
-        states.append("title")
-            .text(d => d.properties.name);
+            // Reset the fill color to its original state
+            const originalFillColor = determineOriginalFillColor(d); // Implement this function based on your logic
+            d3.select(this)
+                .attr("fill", originalFillColor) // Use the original fill color       
+        }
+
+        function determineOriginalFillColor(d) {
+        // Example for a choropleth map where color is determined by data
+            const cases = casesByState[d.properties.name]; // Assuming casesByState maps state names to data
+            return stateColorScale(cases); // Assuming stateColorScale is your d3 scale for coloring states
+        }
+
 
         g.append("path")
             .attr("fill", "none")
@@ -182,7 +219,17 @@
         height: auto; /* Maintain aspect ratio */
     }
 
+    .state-info-box {
+    fill: #fff;
+    stroke: #000;
+    opacity: 0.8;
+    }
+
+    .state-name-text, .state-cases-text {
+        font-size: 12px;
+        fill: #000;
+    }
+
+/* Add any additional styling as needed */
+
 </style>
-
-
-
