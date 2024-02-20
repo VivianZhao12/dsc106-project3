@@ -66,7 +66,7 @@
         // color scale for state and state
         // const maxStateCases = 12251820;
         const stateColorScale = d3.scaleQuantize([0.17, 0.41], d3.schemeBlues[5]);
-        const countyColorScale = d3.scaleQuantize([0.17, 0.41], d3.schemeReds[5]);
+        const countyColorScale = d3.scaleQuantize([0.17, 0.41], d3.schemeBlues[5]);
 
         // map state abbreviations to total cases
         let casesByState = {}; 
