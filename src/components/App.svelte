@@ -1,3 +1,12 @@
+<h1 style ='text-align: center'> End of COVID-19: Multi-Perspective Summary</h1>
+
+<p class='subtitle'> On January 30, 2023, the Biden Administration announced its intent to 
+    end the national emergency and public health emergency declarations 
+    on May 11, 2023, related to the COVID-19 pandemic. Here, we have come up with
+    a visualization to help compare how severe the pandemic was for each state (when NOT zoomed in)
+    and for each county (when zoomed in). 
+</p >
+
 <script>
     import { onMount } from 'svelte';
     import * as d3 from 'd3';
@@ -57,8 +66,9 @@
             .attr("viewBox", [0, 0, width, height])
             .attr("width", width)
             .attr("height", height)
+            .style('transform', 'scale(0.8)')
             .style("max-width", "100%")
-            .style("height", "100%")
+            .style("height", "90%")
             .call(zoom);
 
         const g = svg.append("g");
@@ -111,7 +121,7 @@
 
             // Append a rectangle to act as the background box.
             infoBoxGroup.append("rect")
-                .attr("x", 25) 
+                .attr("x", 15) 
                 .attr("y", -35) // Position the box above the centroid
                 .attr("width", 140) // Set the width of the box.
                 .attr("height", 50) // Set the height of the box.
@@ -121,7 +131,7 @@
 
             // Append text to show the state name inside the box.
             infoBoxGroup.append("text")
-                .attr("x", 95) // Center the text horizontally in the box.
+                .attr("x", 85) // Center the text horizontally in the box.
                 .attr("y", -15) // Position the text in the box
                 .attr("text-anchor", "middle") // Center the text.
                 .text(stateName)
@@ -130,7 +140,7 @@
 
             // Append another text to show the percentage of cases inside the box.
             infoBoxGroup.append("text")
-                .attr("x", 95) // Center the text horizontally in the box.
+                .attr("x", 85) // Center the text horizontally in the box.
                 .attr("y", 0) // Position the text in the box; adjust as needed.
                 .attr("text-anchor", "middle") // Center the text.
                 .text(`${(cases*100).toFixed(2)}% Population`) // Display the percentage of cases.
@@ -183,7 +193,7 @@
             event.stopPropagation();
 
             // Check if we're zooming in on the same element or if the map is already zoomed in
-            if (isZoomed && lastClicked === this) {
+            if (isZoomed) {
                 // Reset to initial zoom
                 reset();
             } else {
@@ -194,7 +204,7 @@
                     zoom.transform,
                     d3.zoomIdentity
                         .translate(width / 2, height / 2)
-                        .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height)))
+                        .scale(Math.max(2, 0.4 / Math.max((x1 - x0) / width, (y1 - y0) / height)))
                         .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
                     d3.pointer(event, svg.node())
                 );
@@ -229,11 +239,16 @@
                     .enter().append("path")
                     .attr("class", "county")
                     .attr("d", path)
+                    .attr('stroke', 'black')
                     .attr("fill", d => {
                         // Determine the fill based on the county's data
                         const countyData = countiesForState.find(county => county.county === d.properties.name);
                         return countyData ? countyColorScale(countyData.percent_cases) : "#ccc";
-                    });
+                    })
+                    .on('click', clicked)
+                countyPaths.append("title")
+                    .text(d => d.properties.name);
+                    
             }
             g.selectAll('.info-box-group').remove()
         }
@@ -253,9 +268,11 @@
         const legendBlockHeight = legendHeight / legendNumBlocks; // Height of each block
 
         // Define the legend group
-        const legend = g.append('g')
+        
+        const l = svg.append('g')
+        const legend = l.append('g')
             .attr('id', 'legend')
-            .attr('transform', `translate(${width - legendWidth - legendMargin}, ${height - legendHeight - legendMargin})`);
+            .attr('transform', 'translate(850,555)');
 
         // Add colored rectangles for each segment of the legend
         const [x_0, x_1, x_2, x_3, x_4] = stateColorScale.range()
@@ -269,9 +286,9 @@
                 .attr('height', legendWidth)
                 .attr('fill', d => d);
 
-        const legend_title = g.append('g')
+        const legend_title = l.append('g')
             .attr('id', 'legend_title')
-            .attr('transform', `translate(${width - legendWidth - legendMargin}, ${height - legendHeight - legendMargin})`);
+            .attr('transform', 'translate(840,555)');
         
         // Title text
         legend_title.append('text') 
@@ -314,10 +331,12 @@
         align-items: center;
         height: 100vh; 
         width: 100vw; 
+        margin-bottom: -150px;
+        margin-top: -50px;
     }
     svg {
-        margin: auto; /* Center the SVG horizontally */
-        display: block;
+        margin-top: -100px;
+        display: block; /* Center the SVG horizontally */
         width: 100%; /* Make SVG responsive */
         height: auto; /* Maintain aspect ratio */
     }
@@ -328,5 +347,32 @@
     font-weight: bold;
     }
 
+    .subtitle {
+        font-size: 18px;
+        width: 75%; /* Set the width to take the full container width */
+        /* max-width: 600px; Max width to avoid being too stretched */
+        margin: 0 auto; /* This centers the block horizontally */
+        text-align: center;
+        color: #646161; /* This sets the text color */
+        padding: 20px; /* This adds space inside the borders of the element */
+        box-sizing: border-box; /* This ensures padding is included in the width */
+    }
+
+    .subtitle_bottom {
+        font-size: 18px;
+        width: 75%; /* Set the width to take the full container width */
+        /* max-width: 600px; Max width to avoid being too stretched */
+        margin: 0 auto; /* This centers the block horizontally */
+        text-align: center;
+        color: #646161; /* This sets the text color */
+        padding: 20px; /* This adds space inside the borders of the element */
+        box-sizing: border-box; /* This ensures padding is included in the width */
+    }
+
 
 </style>
+
+<p class='subtitle_bottom'> Note that some data is missing for some counties due to 
+    missing official data from CDC for regions with small populations. Also note that 
+    since 2023 population data for each state and county is not yet posted officially, we have used the 
+    estimates for 2022 populations from US Census."</p >
