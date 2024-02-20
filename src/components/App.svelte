@@ -7,6 +7,7 @@
     let county_data = [];
     let state_tot_cases = [];
     let us;
+    let county;
     let svg;
     let zoom;
     let initialTransform = d3.zoomIdentity;
@@ -16,7 +17,7 @@
 
 
     onMount(async () => {
-        const res = await fetch('county_data.csv'); 
+        const res = await fetch('county_tot_cases.csv'); 
         const csv = await res.text();
         county_data = d3.csvParse(csv, d3.autoType)
         console.log(county_data);
@@ -26,8 +27,12 @@
         state_tot_cases = d3.csvParse(csv1, d3.autoType);
         console.log(state_tot_cases);
 
-        const resJSON = await fetch('states-albers-10m.json');
-        us = await resJSON.json();
+        const resJSON = await fetch('counties-albers-10m.json');
+        county = await resJSON.json();
+        console.log(county);
+
+        const resJSON1 = await fetch('states-albers-10m.json');
+        us = await resJSON1.json();
         console.log(us);
 
         renderChart();
@@ -86,6 +91,7 @@
                 .on("mouseout", handleMouseOut);  // Add this event listener
 
 
+        
         function handleMouseOver(event, d) {
             const [x, y] = path.centroid(d); // Get the centroid of the state path.
             const stateName = d.properties.name; // Get the state name from the TopoJSON properties.
@@ -103,7 +109,7 @@
             infoBoxGroup.append("rect")
                 .attr("x", 25) // Position the box centered around the centroid; adjust as needed.
                 .attr("y", -35) // Position the box above the centroid; adjust as needed.
-                .attr("width", 100) // Set the width of the box.
+                .attr("width", 140) // Set the width of the box.
                 .attr("height", 50) // Set the height of the box.
                 .attr("fill", "white") // Set the fill color of the box.
                 .attr("stroke", "black") // Set the stroke color of the box.
@@ -111,7 +117,7 @@
 
             // Append text to show the state name inside the box.
             infoBoxGroup.append("text")
-                .attr("x", 75) // Center the text horizontally in the box.
+                .attr("x", 95) // Center the text horizontally in the box.
                 .attr("y", -15) // Position the text in the box; adjust as needed.
                 .attr("text-anchor", "middle") // Center the text.
                 .text(stateName)
@@ -120,10 +126,10 @@
 
             // Append another text to show the percentage of cases inside the box.
             infoBoxGroup.append("text")
-                .attr("x", 75) // Center the text horizontally in the box.
+                .attr("x", 95) // Center the text horizontally in the box.
                 .attr("y", 0) // Position the text in the box; adjust as needed.
                 .attr("text-anchor", "middle") // Center the text.
-                .text(`${cases.toFixed(2)}% cases`) // Display the percentage of cases.
+                .text(`${(cases*100).toFixed(2)}% Population`) // Display the percentage of cases.
                 .attr("class", "state-cases-text"); // Add a class for styling.
         }
 
@@ -154,6 +160,7 @@
 
         function reset() {
             states.transition().style("fill", null);
+        
             svg.transition().duration(750).call(
                 zoom.transform,
                 d3.zoomIdentity, // Reset zoom
@@ -197,6 +204,7 @@
             g.attr("stroke-width", 1 / transform.k);
         }
 
+        // Legend 
         const legendHeight = 200; // Total height of the legend
         const legendWidth = 20; // Width of each legend item
         const legendMargin = 10; // Margin around the legend
@@ -204,7 +212,7 @@
         const legendBlockHeight = legendHeight / legendNumBlocks; // Height of each block
 
         // Define the legend group
-        const legend = svg.append('g')
+        const legend = g.append('g')
             .attr('id', 'legend')
             .attr('transform', `translate(${width - legendWidth - legendMargin}, ${height - legendHeight - legendMargin})`);
 
@@ -215,38 +223,41 @@
         legend.selectAll('rect')
             .data([x_4, x_3, x_2, x_1, x_0])
             .enter().append('rect')
-                .attr('x', 0)
-                .attr('y', (d, i) => i * legendBlockHeight)
-                .attr('width', legendWidth)
-                .attr('height', legendBlockHeight)
+                .attr('x',(d, i) => i * legendBlockHeight)
+                .attr('y', 0)
+                .attr('width', legendBlockHeight)
+                .attr('height', legendWidth)
                 .attr('fill', d => d);
 
+        const legend_title = g.append('g')
+            .attr('id', 'legend_title')
+            .attr('transform', `translate(${width - legendWidth - legendMargin}, ${height - legendHeight - legendMargin})`);
+        
+        legend_title.append('text') // Title text
+            .attr('x', 100)
+            .attr('y', -10) // Position the title above the legend rectangles
+            .text('% Population Positive for COVID-19')
+            .attr('text-anchor', 'middle')
+            .attr('class', 'legend-title')
+            .style('font-weight', 'bold');
 
-        // legend.append('text')
-        //     .attr('class', 'legend-title')
-        //     .attr('x', legendWidth/2)
-        //     .attr('y', 15) // Position the title above the legend rectangles
-        //     .style('text-anchor', 'middle')
-        //     .style('font-weight', 'bold')
-        //     .text('Percent Cases'); // Title text
-
-        // Add text labels for each segment of the legend
+            
         const legendScale = d3.scaleLinear()
             .domain(stateColorScale.domain())
             .range([legendHeight, 0]);
 
-        const legendAxis = d3.axisRight(legendScale)
+        const legendAxis = d3.axisBottom(legendScale)
+            .tickSize(0)
             .ticks(legendNumBlocks)
             .tickFormat(d => `${d}%`);
-
 
     
         legend.call(legendAxis)
             .selectAll('text')
             .style('text-anchor', 'start')
-            .attr('x', 5)
+            .attr('dx', 5)
             .attr('dy', 0)
-            .attr('transform', 'translate(20,0)');
+            .attr('transform', 'translate(-20,30)');
     }
 </script>
 
@@ -268,18 +279,6 @@
         display: block;
         width: 100%; /* Make SVG responsive */
         height: auto; /* Maintain aspect ratio */
-    }
-
-    .state-info-box {
-    fill: #fff;
-    stroke: #000;
-    opacity: 0.8;
-    }
-
-    .state-name-text, .state-cases-text {
-        font-size: 12px;
-        fill:
-         #000;
     }
 
     .legend-title {
