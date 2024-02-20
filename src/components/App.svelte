@@ -15,8 +15,9 @@
     let lastClicked = null;
 
 
-
+    // load data (county, state, topojson)
     onMount(async () => {
+        // map covid data
         const res = await fetch('county_tot_cases.csv'); 
         const csv = await res.text();
         county_data = d3.csvParse(csv, d3.autoType)
@@ -27,6 +28,7 @@
         state_tot_cases = d3.csvParse(csv1, d3.autoType);
         console.log(state_tot_cases);
 
+        // map data
         const resJSON = await fetch('counties-albers-10m.json');
         county = await resJSON.json();
         console.log(county);
@@ -38,18 +40,19 @@
         renderChart();
     });
  
+    // function that creates map, includes all actions
     function renderChart() {
 
-
         const path = d3.geoPath();
-
         const width = 1000;
         const height = 640;
 
+        //zoom in
         const zoom = d3.zoom()
             .scaleExtent([1, 8])
             .on("zoom", zoomed);
 
+        // main us map
         svg = d3.select("svg")
             .attr("viewBox", [0, 0, width, height])
             .attr("width", width)
@@ -60,12 +63,14 @@
 
         const g = svg.append("g");
 
+        // color scale for state and state
         // const maxStateCases = 12251820;
         const stateColorScale = d3.scaleQuantize([0.17, 0.41], d3.schemeBlues[5]);
+        const countyColorScale = d3.scaleQuantize([0.17, 0.41], d3.schemeReds[5]);
 
-        let casesByState = {}; // This will map state abbreviations to total cases
+        // map state abbreviations to total cases
+        let casesByState = {}; 
         state_tot_cases.forEach(d => {
-     
             casesByState[d.state_full] = d.percent_cases;
         });
 
@@ -73,22 +78,21 @@
             .attr("fill", "#444")
             .attr("cursor", "pointer")
             .selectAll("path")
-            .data(topojson.feature(us, us.objects.states).features)
+            .data(topojson.feature(us, us.objects.states).features) // load topodata to render us map
             .join("path")
                 .attr("fill", d => {
                     const state_name = d.properties.name; 
-        
-                    const cases = casesByState[state_name]; // Default to 0 if no data available
+                    const cases = casesByState[state_name]; 
                     return stateColorScale(cases);
-                })
+                }) // fill color of each state according to scale
                 .on("click", clicked)
                 .attr("d", path)
                 .join("path")
                 .attr("d", path)
                 .attr("class", "state")
                 .on("click", clicked)
-                .on("mouseover", handleMouseOver) // Add this event listener
-                .on("mouseout", handleMouseOut);  // Add this event listener
+                .on("mouseover", handleMouseOver) 
+                .on("mouseout", handleMouseOut); 
 
 
         
@@ -103,25 +107,25 @@
             const infoBoxGroup = g.append("g")
                 .attr("class", "info-box-group")
                 .attr("transform", `translate(${x}, ${y})`)
-                .style("pointer-events", "none"); // Ignore mouse events
+                .style("pointer-events", "none"); // Ignore mouse events (moving on infobox)
 
             // Append a rectangle to act as the background box.
             infoBoxGroup.append("rect")
-                .attr("x", 25) // Position the box centered around the centroid; adjust as needed.
-                .attr("y", -35) // Position the box above the centroid; adjust as needed.
+                .attr("x", 25) 
+                .attr("y", -35) // Position the box above the centroid
                 .attr("width", 140) // Set the width of the box.
                 .attr("height", 50) // Set the height of the box.
                 .attr("fill", "white") // Set the fill color of the box.
                 .attr("stroke", "black") // Set the stroke color of the box.
-                .attr("class", "state-info-box"); // Add a class for styling.
+                .attr("class", "state-info-box"); // a class for styling.
 
             // Append text to show the state name inside the box.
             infoBoxGroup.append("text")
                 .attr("x", 95) // Center the text horizontally in the box.
-                .attr("y", -15) // Position the text in the box; adjust as needed.
+                .attr("y", -15) // Position the text in the box
                 .attr("text-anchor", "middle") // Center the text.
                 .text(stateName)
-                .attr("class", "state-name-text") // Add a class for styling.
+                .attr("class", "state-name-text") // a class for styling.
                 .style('font-weight', 'bold');
 
             // Append another text to show the percentage of cases inside the box.
@@ -144,12 +148,11 @@
         }
 
         function determineOriginalFillColor(d) {
-        // Example for a choropleth map where color is determined by data
-            const cases = casesByState[d.properties.name]; // Assuming casesByState maps state names to data
-            return stateColorScale(cases); // Assuming stateColorScale is your d3 scale for coloring states
+            const cases = casesByState[d.properties.name]; 
+            return stateColorScale(cases); 
         }
 
-
+        // create boundaries (outline of maps)
         g.append("path")
             .attr("fill", "none")
             .attr("stroke", "white")
@@ -160,6 +163,7 @@
 
         function reset() {
             states.transition().style("fill", null);
+            g.selectAll(".county").remove();
         
             svg.transition().duration(750).call(
                 zoom.transform,
@@ -173,6 +177,11 @@
 
         function clicked(event, d) {
             const [[x0, y0], [x1, y1]] = path.bounds(d);
+            const stateName = d.properties.name;
+            const stateId = d.id;
+            
+            console.log('d')
+            console.log(d)
             event.stopPropagation();
 
             // Check if we're zooming in on the same element or if the map is already zoomed in
@@ -182,7 +191,7 @@
             } else {
                 // Proceed with zooming in
                 states.transition().style("fill", null);
-                d3.select(this).transition().style("fill", "green");
+                d3.select(this).transition().style("fill", "grey");
                 svg.transition().duration(750).call(
                     zoom.transform,
                     d3.zoomIdentity
@@ -193,8 +202,38 @@
                 );
 
                 isZoomed = true;
+                // lastClicked = this;
                 lastClicked = this;
+
+                // Remove previous counties if any
+                g.selectAll(".county").remove();
+
+                // Filter county data for the selected state
+                const countiesForState = county_data.filter(county => county.state_full === stateName);
+          
+                console.log('countiesForState')
+                console.log(countiesForState)
+                // Find the corresponding counties in the topoJSON
+                const countyFeatures = topojson.feature(county, county.objects.counties).features
+                    .filter(feature => countiesForState.some(county => county.county === feature.properties.name && county.state_full === stateName));
+
+                console.log('countyFeatures')
+                console.log(countyFeatures)
+                
+
+                // Render counties
+                const countyPaths = g.selectAll(".county")
+                    .data(countyFeatures)
+                    .enter().append("path")
+                    .attr("class", "county")
+                    .attr("d", path)
+                    .attr("fill", d => {
+                        // Determine the fill based on the county's data
+                        const countyData = countiesForState.find(county => county.county === d.properties.name);
+                        return countyData ? countyColorScale(countyData.percent_cases) : "#ccc";
+                    });
             }
+            g.selectAll('.info-box-group').remove()
         }
 
 
@@ -217,7 +256,6 @@
             .attr('transform', `translate(${width - legendWidth - legendMargin}, ${height - legendHeight - legendMargin})`);
 
         // Add colored rectangles for each segment of the legend
-
         const [x_0, x_1, x_2, x_3, x_4] = stateColorScale.range()
 
         legend.selectAll('rect')
@@ -233,7 +271,8 @@
             .attr('id', 'legend_title')
             .attr('transform', `translate(${width - legendWidth - legendMargin}, ${height - legendHeight - legendMargin})`);
         
-        legend_title.append('text') // Title text
+        // Title text
+        legend_title.append('text') 
             .attr('x', 100)
             .attr('y', -10) // Position the title above the legend rectangles
             .text('% Population Positive for COVID-19')
@@ -287,6 +326,5 @@
     font-weight: bold;
     }
 
-/* Add any additional styling as needed */
 
 </style>
