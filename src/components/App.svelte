@@ -18,7 +18,7 @@
     // load data (county, state, topojson)
     onMount(async () => {
         // map covid data
-        const res = await fetch('county_tot_cases.csv'); 
+        const res = await fetch('county_data_fip.csv'); 
         const csv = await res.text();
         county_data = d3.csvParse(csv, d3.autoType)
         console.log(county_data);
@@ -180,8 +180,6 @@
             const stateName = d.properties.name;
             const stateId = d.id;
             
-            console.log('d')
-            console.log(d)
             event.stopPropagation();
 
             // Check if we're zooming in on the same element or if the map is already zoomed in
@@ -211,12 +209,16 @@
                 // Filter county data for the selected state
                 const countiesForState = county_data.filter(county => county.state_full === stateName);
           
+
                 console.log('countiesForState')
                 console.log(countiesForState)
+
+                var zeros = d3.format('05d')
                 // Find the corresponding counties in the topoJSON
                 const countyFeatures = topojson.feature(county, county.objects.counties).features
-                    .filter(feature => countiesForState.some(county => county.county === feature.properties.name && county.state_full === stateName));
+                    .filter(feature => countiesForState.some(county => zeros(county.FIPS).toString() === feature.id && county.state_full === stateName));
 
+                    
                 console.log('countyFeatures')
                 console.log(countyFeatures)
                 
