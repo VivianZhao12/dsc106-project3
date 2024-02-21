@@ -338,7 +338,7 @@
         const legendAxis = d3.axisBottom(legendScale)
             .tickSize(0)
             .ticks(legendNumBlocks)
-            .tickFormat(d => `${d}%`);
+            .tickFormat(d => `${d*100}%`);
 
     
         legend.call(legendAxis)
