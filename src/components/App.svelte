@@ -1,11 +1,22 @@
-<h1 style ='text-align: center'> End of COVID-19: Multi-Perspective Summary</h1>
+<h1 style ='text-align: center; font-size: 46px'> Less Populated States and Counties Faced Greater COVID-19 Pandemic Challenges </h1>
+<h2 style ='text-align: center'> A Dive into Statewide and Local Data Insights </h2>
+<a style ='text-align: center' href="dsc106writeup.html">my link</a>
 
-<p class='subtitle'> On January 30, 2023, the Biden Administration announced its intent to 
-    end the national emergency and public health emergency declarations 
-    on May 11, 2023, related to the COVID-19 pandemic. Here, we have come up with
-    a visualization to help compare how severe the pandemic was for each state (when NOT zoomed in)
-    and for each county (when zoomed in). 
+<p class='subtitle'> With the rise in vaccination rates leading the charge, the Biden Administration ended the national emergency and public health emergency declarations 
+    on May 11, 2023, related to the COVID-19 pandemic. Below, we have come up with
+    a visualization to help compare how severe the pandemic was for each state (when tha map is not zoomed in)
+    and for each county (when the map is zoomed in) based on how much of the population 
+    has previously tested positive for COVID-19 as of the last day of records - May 11, 2023. 
 </p >
+<p class='subtitle'> Indicated by the intensity of blue, you may notice that <bold class='bolded'> states with smaller populations,
+    such as Alaska, North Dakota, Rhode Island, along with the contiguous states of Kentucky, Tennessee, 
+    and West Virginia, have experienced a higher prevalence of COVID-19. </bold>
+    Each of these states has reported that more than 35% of their populations have cumulatively 
+    tested positive for COVID-19 as of May 11, 2023. </p >
+
+<br>
+<p class = 'normal_left_text'>💡💡 Advice: try clicking on a state, and click again: </p >
+
 
 <script>
     import { onMount } from 'svelte';
@@ -73,8 +84,8 @@
 
         const g = svg.append("g");
 
-        // color scale for state and state
-        // const maxStateCases = 12251820;
+        // Color scale for state and state
+            // const maxStateCases = 12251820;
         const stateColorScale = d3.scaleQuantize([0.17, 0.41], d3.schemeBlues[5]);
         const countyColorScale = d3.scaleQuantize([0.17, 0.41], d3.schemeBlues[5]);
 
@@ -107,54 +118,78 @@
 
         
         function handleMouseOver(event, d) {
-            const [x, y] = path.centroid(d); // Get the centroid of the state path.
-            const stateName = d.properties.name; // Get the state name from the TopoJSON properties.
-            const cases = casesByState[stateName] || 0; // Get the cases or default to 0 if not found.
+            const [x, y] = path.centroid(d); // centroid of the state path.
+            const stateName = d.properties.name; // state name from the TopoJSON properties.
+            const cases = casesByState[stateName] || 0; 
+
+            let populationByState = {}; 
+            state_tot_cases.forEach(d => {
+                populationByState[d.state_full] = d.population_data_millions;
+            });
+
+            const population = populationByState[d.state_full];
 
             d3.select(this)
-                .attr("fill", "#fffea8") // Make the stroke color black
+                .attr("fill", "#fffea8") 
 
             const infoBoxGroup = g.append("g")
                 .attr("class", "info-box-group")
                 .attr("transform", `translate(${x}, ${y})`)
-                .style("pointer-events", "none"); // Ignore mouse events (moving on infobox)
+                .style("pointer-events", "none"); // ignore mouse events (moving on infobox)
 
             // Append a rectangle to act as the background box.
             infoBoxGroup.append("rect")
                 .attr("x", 15) 
-                .attr("y", -35) // Position the box above the centroid
-                .attr("width", 140) // Set the width of the box.
-                .attr("height", 50) // Set the height of the box.
-                .attr("fill", "white") // Set the fill color of the box.
-                .attr("stroke", "black") // Set the stroke color of the box.
-                .attr("class", "state-info-box"); // a class for styling.
+                .attr("y", -35) 
+                .attr("width", 180) 
+                .attr("height", 55) 
+                .attr("fill", "white") 
+                .attr("stroke", "black") 
+                .attr("class", "state-info-box"); 
 
             // Append text to show the state name inside the box.
             infoBoxGroup.append("text")
-                .attr("x", 85) // Center the text horizontally in the box.
-                .attr("y", -15) // Position the text in the box
-                .attr("text-anchor", "middle") // Center the text.
+                .attr("x", 105) 
+                .attr("y", -15) 
+                .attr("text-anchor", "middle") 
                 .text(stateName)
-                .attr("class", "state-name-text") // a class for styling.
+                .attr("class", "state-name-text") 
                 .style('font-weight', 'bold');
 
-            // Append another text to show the percentage of cases inside the box.
+            // Append another text to show the percentage of population being tested inside the box.
             infoBoxGroup.append("text")
-                .attr("x", 85) // Center the text horizontally in the box.
-                .attr("y", 0) // Position the text in the box; adjust as needed.
-                .attr("text-anchor", "middle") // Center the text.
-                .text(`${(cases*100).toFixed(2)}% Population`) // Display the percentage of cases.
-                .attr("class", "state-cases-text"); // Add a class for styling.
+                .attr("x", 110) 
+                .attr("y", 0) 
+                .attr("text-anchor", "middle") 
+                .text(`${(cases*100).toFixed(2)}%`) 
+                .attr('text-highlight', 'yellow')
+                .attr("class", "state-cases-text"); 
+            
+            // infoBoxGroup.append("rect")
+            //     .attr("x", 107)
+            //     .attr("y", 13)
+            //     .attr("height", 30)
+            //     .attr("rx", 15)
+            //     .attr("ry", 15)
+            //     .style("fill", "#black");
+
+            infoBoxGroup.append("text")
+                // .attr('margintop', 10)
+                .attr("x", 107) 
+                .attr("y", 13) // Position the text in the box (based on the box coordinates)
+                .attr("text-anchor", "middle") 
+                .text(`Population: ${(populationByState[d.properties.name]).toFixed(3)} M`) 
+                .attr("class", "state-cases-text"); 
         }
 
         function handleMouseOut(event, d) {
-            // Remove the group with the box and text when the mouse leaves the state path.
+            // Remove the box of text when the mouse leaves a state
             g.selectAll(".info-box-group").remove();
 
             // Reset the fill color to its original state
-            const originalFillColor = determineOriginalFillColor(d); // Implement this function based on your logic
+            const originalFillColor = determineOriginalFillColor(d); 
             d3.select(this)
-                .attr("fill", originalFillColor) // Use the original fill color       
+                .attr("fill", originalFillColor) 
         }
 
         function determineOriginalFillColor(d) {
@@ -192,12 +227,9 @@
             
             event.stopPropagation();
 
-            // Check if we're zooming in on the same element or if the map is already zoomed in
-            if (isZoomed) {
-                // Reset to initial zoom
+            if (isZoomed) { // Check if the map is already zoomed in
                 reset();
-            } else {
-                // Proceed with zooming in
+            } else { // if not zoomed in already, zoom in
                 states.transition().style("fill", null);
                 d3.select(this).transition().style("fill", "grey");
                 svg.transition().duration(750).call(
@@ -261,11 +293,11 @@
         }
 
         // Legend 
-        const legendHeight = 200; // Total height of the legend
-        const legendWidth = 20; // Width of each legend item
-        const legendMargin = 10; // Margin around the legend
-        const legendNumBlocks = stateColorScale.range().length; // Number of blocks in the legend
-        const legendBlockHeight = legendHeight / legendNumBlocks; // Height of each block
+        const legendHeight = 200; 
+        const legendWidth = 20;
+        const legendMargin = 10; 
+        const legendNumBlocks = stateColorScale.range().length; 
+        const legendBlockHeight = legendHeight / legendNumBlocks;
 
         // Define the legend group
         
@@ -293,7 +325,7 @@
         // Title text
         legend_title.append('text') 
             .attr('x', 100)
-            .attr('y', -10) // Position the title above the legend rectangles
+            .attr('y', -10) 
             .text('% Population Positive for COVID-19')
             .attr('text-anchor', 'middle')
             .attr('class', 'legend-title')
@@ -338,7 +370,7 @@
         margin-top: -100px;
         display: block; /* Center the SVG horizontally */
         width: 100%; /* Make SVG responsive */
-        height: auto; /* Maintain aspect ratio */
+        height: auto; 
     }
 
     .legend-title {
@@ -349,30 +381,74 @@
 
     .subtitle {
         font-size: 18px;
-        width: 75%; /* Set the width to take the full container width */
-        /* max-width: 600px; Max width to avoid being too stretched */
-        margin: 0 auto; /* This centers the block horizontally */
+        width: 76%; 
+        /* max-width: 600px;  */
+        margin: 0 auto; /* centers the block horizontally */
         text-align: center;
-        color: #646161; /* This sets the text color */
-        padding: 20px; /* This adds space inside the borders of the element */
-        box-sizing: border-box; /* This ensures padding is included in the width */
+        color: #646161; 
+        padding: 20px; /* adds space inside the borders of the element */
+        box-sizing: border-box; 
+    }
+
+    .subtitle_more_padding {
+        font-size: 18px;
+        width: 76%; 
+        /* max-width: 600px;  */
+        margin: 0 auto; /* centers the block horizontally */
+        text-align: center;
+        color: #646161; 
+        padding: 30px; /* adds space inside the borders of the element */
+        box-sizing: border-box; 
     }
 
     .subtitle_bottom {
         font-size: 18px;
-        width: 75%; /* Set the width to take the full container width */
-        /* max-width: 600px; Max width to avoid being too stretched */
-        margin: 0 auto; /* This centers the block horizontally */
+        width: 75%; 
+        /* max-width: 600px; */
+        margin: 0 auto; 
         text-align: center;
-        color: #646161; /* This sets the text color */
-        padding: 20px; /* This adds space inside the borders of the element */
-        box-sizing: border-box; /* This ensures padding is included in the width */
+        color: #646161; 
+        padding: 20px; 
+        box-sizing: border-box; 
+    }
+
+    .normal_center_text {
+        font-size: 18px;
+        width: 75%; 
+        /* max-width: 600px; */
+        margin: 0 auto; 
+        text-align: center;
+        color: #646161; 
+        padding: 0 0 20px 20px; 
+        box-sizing: border-box; 
+    }
+
+    .normal_left_text {
+        font-size: 18px;
+        width: 75%; 
+        /* max-width: 600px; */
+        margin: 0 auto; 
+        text-align: left;
+        color: #646161; 
+        padding: 0 0 0px 20px; 
+        box-sizing: border-box; 
     }
 
 
+    .bolded {
+        font-weight: bold;
+        color: #235097;
+    }
+    
 </style>
 
-<p class='subtitle_bottom'> Note that some data is missing for some counties due to 
-    missing official data from CDC for regions with small populations. Also note that 
-    since 2023 population data for each state and county is not yet posted officially, we have used the 
-    estimates for 2022 populations from US Census."</p >
+
+<p class='subtitle_bottom'> ** Please note that our county-level data may be incomplete in some instances,
+     as official CDC records for areas with small populations are not always available.
+</p >
+
+<p class='normal_center_text'> ** 
+    Additionally, since the most recent 2023 population data for states and counties have not 
+    been officially released, we have utilized the 2022 population estimates from the U.S. 
+    Census to conduct our analysis."
+</p >
