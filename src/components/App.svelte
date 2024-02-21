@@ -1,6 +1,5 @@
 <h1 style ='text-align: center; font-size: 46px'> Less Populated States and Counties Faced Greater COVID-19 Pandemic Challenges </h1>
 <h2 style ='text-align: center'> A Dive into Statewide and Local Data Insights </h2>
-<a style ='text-align: center' href="dsc106writeup.html">my link</a>
 
 <p class='subtitle'> With the rise in vaccination rates leading the charge, the Biden Administration ended the national emergency and public health emergency declarations 
     on May 11, 2023, related to the COVID-19 pandemic. Below, we have come up with
